@@ -149,30 +149,41 @@ export default function PembayaranPage({
     }
   }
 
+  const ADMIN_WHATSAPP = "6282210430893"; // Format internasional (0822... → 62822...)
+
   async function handleConfirmTransfer() {
     if (!order || confirming) return;
     setConfirming(true);
     setError("");
-    try {
-      const res = await fetch("/api/payment/confirm-transfer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: order.id }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        setError(data.error || "Gagal konfirmasi transfer.");
-        return;
-      }
-      setConfirmed(true);
-      setTimeout(() => {
-        router.push(`/pembayaran/menunggu?orderId=${order.id}`);
-      }, 1200);
-    } catch {
-      setError("Terjadi kesalahan jaringan.");
-    } finally {
-      setConfirming(false);
-    }
+
+    // 1. Catat konfirmasi di server (background, tidak blocking WA)
+    fetch("/api/payment/confirm-transfer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId: order.id }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.ok) setConfirmed(true);
+      })
+      .catch(() => {});
+
+    // 2. Buka WhatsApp admin dengan pesan konfirmasi pre-filled
+    const waMessage =
+      `Halo Admin Start Digital 👋\n\n` +
+      `Saya ingin konfirmasi pembayaran:\n\n` +
+      `📋 *Order ID:* #${order.id}\n` +
+      `👤 *Nama:* ${order.profileName}\n` +
+      `📧 *Email:* ${order.profileEmail}\n` +
+      `💎 *Paket:* ${order.planName}\n` +
+      `💰 *Jumlah:* Rp${order.amount.toLocaleString("id-ID")}\n` +
+      `🏦 *Metode:* Transfer Bank Manual\n\n` +
+      `Saya sudah melakukan transfer. Mohon verifikasi agar akun premium saya bisa aktif. Terima kasih! 🙏`;
+
+    const waUrl = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(waMessage)}`;
+    window.open(waUrl, "_blank", "noopener,noreferrer");
+
+    setConfirming(false);
   }
 
   function copyBankNumber(num: string) {
@@ -246,10 +257,9 @@ export default function PembayaranPage({
         </div>
       )}
 
-      {!midtransAvailable && (
+      {paymentMode === "midtrans" && !midtransAvailable && (
         <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          ⚠️ Midtrans belum dikonfigurasi. Set <code className="rounded bg-white/10 px-1">MIDTRANS_SERVER_KEY</code> dan{" "}
-          <code className="rounded bg-white/10 px-1">MIDTRANS_CLIENT_KEY</code> di environment.
+          ⚠️ Midtrans belum dikonfigurasi. Hubungi admin untuk mengaktifkan pembayaran online.
         </div>
       )}
 
@@ -341,62 +351,184 @@ export default function PembayaranPage({
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-3xl border border-amber-400/30 bg-gradient-to-br from-amber-500/[0.12] to-orange-500/[0.08] p-6">
-                <p className="text-xs font-semibold uppercase tracking-wider text-amber-200">
-                  Transfer Bank Manual
-                </p>
-                <p className="mt-2 text-sm text-slate-300">
-                  Transfer ke salah satu rekening di bawah ini sesuai nominal yang tertera.
-                </p>
+              <style>{`
+                @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+                @keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+                @keyframes pulseGlow { 0%,100%{box-shadow:0 0 24px rgba(16,185,129,0.25)} 50%{box-shadow:0 0 36px rgba(16,185,129,0.55)} }
+                @keyframes spin-slow { to { transform: rotate(360deg); } }
+                .tier-shimmer::before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,0.18) 50%,transparent 70%);background-size:200% 100%;animation:shimmer 3.5s linear infinite;pointer-events:none;border-radius:inherit}
+                .floaty{animation:floaty 3s ease-in-out infinite}
+                .pulse-glow{animation:pulseGlow 2.4s ease-in-out infinite}
+              `}</style>
 
-                {transferInstructions && (
-                  <p className="mt-3 text-xs text-amber-100/80 leading-relaxed">
-                    {transferInstructions}
-                  </p>
-                )}
+              {(() => {
+                const tier =
+                  order.planSlug === "pro-tahunan" ? "gold"
+                  : order.planSlug === "enterprise" ? "platinum"
+                  : "silver";
 
-                <div className="mt-4 space-y-2">
-                  {bankAccounts.map((bank, i) => (
-                    <div key={i} className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-bold text-white">{bank.bank}</p>
-                          <p className="text-xs text-slate-400">{bank.holderName}</p>
+                const tierStyle = {
+                  silver: {
+                    label: "SILVER",
+                    border: "border-slate-300/40",
+                    ring: "ring-slate-300/20",
+                    gradient: "from-slate-200 via-slate-100 to-slate-300",
+                    accent: "text-slate-200",
+                    accentBg: "bg-slate-200",
+                    glow: "shadow-slate-400/30",
+                    numberBg: "from-slate-800 to-slate-900",
+                    numberBorder: "border-slate-300/30",
+                    icon: "🥈",
+                  },
+                  gold: {
+                    label: "GOLD",
+                    border: "border-amber-300/50",
+                    ring: "ring-amber-300/30",
+                    gradient: "from-amber-300 via-yellow-200 to-amber-400",
+                    accent: "text-amber-200",
+                    accentBg: "bg-amber-300",
+                    glow: "shadow-amber-400/40",
+                    numberBg: "from-amber-950 to-yellow-950",
+                    numberBorder: "border-amber-300/40",
+                    icon: "🥇",
+                  },
+                  platinum: {
+                    label: "PLATINUM",
+                    border: "border-cyan-200/50",
+                    ring: "ring-cyan-200/30",
+                    gradient: "from-cyan-100 via-slate-50 to-blue-200",
+                    accent: "text-cyan-200",
+                    accentBg: "bg-cyan-200",
+                    glow: "shadow-cyan-300/40",
+                    numberBg: "from-slate-900 to-cyan-950",
+                    numberBorder: "border-cyan-200/40",
+                    icon: "💎",
+                  },
+                }[tier];
+
+                return (
+                  <>
+                    {/* Header tier banner */}
+                    <div className={`relative overflow-hidden rounded-3xl border ${tierStyle.border} bg-gradient-to-br ${tierStyle.gradient} p-[1px] shadow-xl ${tierStyle.glow}`}>
+                      <div className="tier-shimmer relative rounded-3xl bg-slate-950 p-5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="floaty text-3xl">{tierStyle.icon}</span>
+                            <div>
+                              <p className={`text-[10px] font-black uppercase tracking-[0.25em] ${tierStyle.accent}`}>
+                                {tierStyle.label} Membership
+                              </p>
+                              <p className="mt-0.5 text-sm font-bold text-white">{order.planName}</p>
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white">
+                            {order.planPeriod.toUpperCase()}
+                          </span>
                         </div>
-                        <button
-                          onClick={() => copyBankNumber(bank.number)}
-                          className="rounded-lg bg-white/10 px-2 py-1 text-xs font-mono text-white hover:bg-white/20"
-                        >
-                          {copiedBank === bank.number ? "✓ Tersalin" : bank.number}
-                        </button>
+
+                        <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                            Total yang harus ditransfer
+                          </p>
+                          <p className={`mt-1 text-3xl font-black tracking-tight ${tierStyle.accent}`}>
+                            Rp{order.amount.toLocaleString("id-ID")}
+                          </p>
+                          <p className="mt-1 text-[11px] text-slate-400">
+                            Transfer sesuai nominal tepat — jangan dibulatkan.
+                          </p>
+                        </div>
                       </div>
-                      {bank.note && (
-                        <p className="mt-2 text-[10px] text-slate-500 italic">{bank.note}</p>
-                      )}
                     </div>
-                  ))}
-                </div>
 
-                <button
-                  onClick={handleConfirmTransfer}
-                  disabled={confirming || confirmed || isPaid}
-                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition hover:shadow-emerald-500/40 disabled:opacity-50"
-                >
-                  {confirmed
-                    ? "✓ Konfirmasi Terkirim"
-                    : confirming
-                    ? "Mengirim..."
-                    : isPaid
-                    ? "✓ Sudah Dibayar"
-                    : "Saya Sudah Transfer"}
-                </button>
+                    {transferInstructions && (
+                      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                        <p className="text-xs leading-relaxed text-slate-300">
+                          {transferInstructions}
+                        </p>
+                      </div>
+                    )}
 
-                {confirmationNote && (
-                  <p className="mt-3 text-center text-[10px] text-slate-500 leading-relaxed">
-                    {confirmationNote}
-                  </p>
-                )}
-              </div>
+                    {/* Bank cards */}
+                    <div className="space-y-3">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Pilih rekening tujuan
+                      </p>
+                      {bankAccounts.map((bank, i) => (
+                        <div
+                          key={i}
+                          className={`group relative overflow-hidden rounded-2xl border ${tierStyle.border} bg-gradient-to-br ${tierStyle.numberBg} p-4 shadow-lg transition hover:scale-[1.02] hover:shadow-xl`}
+                          style={{ animation: `floaty ${3 + i * 0.3}s ease-in-out infinite` }}
+                        >
+                          <div className="tier-shimmer pointer-events-none absolute inset-0 rounded-2xl" />
+
+                          <div className="relative flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`grid h-8 w-8 place-items-center rounded-lg ${tierStyle.accentBg} text-base font-black text-slate-900 shadow-md`}>
+                                  {bank.bank.charAt(0)}
+                                </span>
+                                <div>
+                                  <p className="text-base font-black text-white">{bank.bank}</p>
+                                  <p className="text-[11px] text-slate-400">{bank.holderName}</p>
+                                </div>
+                              </div>
+
+                              <div className={`mt-3 flex items-center justify-between gap-2 rounded-xl border ${tierStyle.numberBorder} bg-black/40 px-3 py-2.5`}>
+                                <span className="font-mono text-base font-bold tracking-wider text-white sm:text-lg">
+                                  {bank.number.replace(/(\d{4})(?=\d)/g, "$1 ")}
+                                </span>
+                                <button
+                                  onClick={() => copyBankNumber(bank.number)}
+                                  className={`shrink-0 rounded-lg ${tierStyle.accentBg} px-3 py-1.5 text-xs font-bold text-slate-900 shadow transition hover:scale-105 active:scale-95`}
+                                >
+                                  {copiedBank === bank.number ? "✓ Tersalin" : "📋 Copy"}
+                                </button>
+                              </div>
+
+                              {bank.note && (
+                                <p className="mt-2 text-[11px] italic text-slate-400">
+                                  💡 {bank.note}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Tombol konfirmasi → WhatsApp */}
+                    <button
+                      onClick={handleConfirmTransfer}
+                      disabled={confirming || confirmed || isPaid}
+                      className={`pulse-glow relative mt-2 flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 px-5 py-4 text-sm font-black text-white transition hover:scale-[1.02] active:scale-95 disabled:opacity-60 disabled:hover:scale-100`}
+                    >
+                      <span className="tier-shimmer absolute inset-0" />
+                      <span className="relative flex items-center gap-2">
+                        {confirmed ? (
+                          <>✓ Terkirim ke WhatsApp Admin</>
+                        ) : confirming ? (
+                          <>Memproses...</>
+                        ) : isPaid ? (
+                          <>✓ Sudah Dibayar</>
+                        ) : (
+                          <>
+                            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white" aria-hidden>
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                            </svg>
+                            Saya Sudah Transfer — Konfirmasi via WhatsApp
+                          </>
+                        )}
+                      </span>
+                    </button>
+
+                    {confirmationNote && (
+                      <p className="text-center text-[10px] leading-relaxed text-slate-500">
+                        {confirmationNote}
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
 
