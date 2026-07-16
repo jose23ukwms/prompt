@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import PasswordInput from "@/components/PasswordInput";
 
 type Plan = {
   id: number;
@@ -24,6 +25,8 @@ function DaftarPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [acceptedLegal, setAcceptedLegal] = useState(false);
   const [errors, setErrors] = useState<FieldError[]>([]);
   const [loading, setLoading] = useState(false);
@@ -55,6 +58,22 @@ function DaftarPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrors([]);
+
+    // Validasi client-side password
+    const localErrors: FieldError[] = [];
+    if (!password || password.length < 8) {
+      localErrors.push({ field: "password", message: "Password minimal 8 karakter." });
+    } else if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+      localErrors.push({ field: "password", message: "Password harus mengandung huruf dan angka." });
+    }
+    if (password !== passwordConfirm) {
+      localErrors.push({ field: "passwordConfirm", message: "Konfirmasi password tidak cocok." });
+    }
+    if (localErrors.length > 0) {
+      setErrors(localErrors);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -66,6 +85,7 @@ function DaftarPage() {
           email,
           phone,
           planSlug: selectedPlan,
+          password,
           acceptedTerms: acceptedLegal,
           acceptedPrivacy: acceptedLegal,
         }),
@@ -298,6 +318,35 @@ function DaftarPage() {
             {getFieldError("phone") && (
               <p className="mt-1 text-xs text-rose-400">{getFieldError("phone")}</p>
             )}
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-300">
+              Password *
+            </label>
+            <PasswordInput
+              value={password}
+              onChange={setPassword}
+              placeholder="Min. 8 karakter, huruf + angka"
+              error={getFieldError("password")}
+              showStrength
+            />
+            <p className="mt-1 text-[11px] text-slate-500">
+              Gunakan kombinasi huruf besar, huruf kecil, angka, dan simbol untuk password yang kuat.
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-300">
+              Konfirmasi Password *
+            </label>
+            <PasswordInput
+              value={passwordConfirm}
+              onChange={setPasswordConfirm}
+              placeholder="Ulangi password yang sama"
+              error={getFieldError("passwordConfirm")}
+              autoComplete="new-password"
+            />
           </div>
 
           {/* STEP 3: KONFIRMASI BENEFIT */}
