@@ -3,39 +3,43 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function MasukPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
+    if (!email || !password) {
+      setError("Email dan password wajib diisi.");
+      return;
+    }
+
+    setLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
-
       const data = await res.json();
 
-      if (!res.ok) {
+      if (!res.ok || !data.ok) {
         setError(data.errors?.[0]?.message || "Gagal masuk.");
         return;
       }
 
-      // Simpan session
       localStorage.setItem("sd_user_email", email.trim().toLowerCase());
       localStorage.setItem("sd_user_plan", data.profile.planSlug);
       localStorage.setItem("sd_user_status", data.profile.status);
       localStorage.setItem("sd_user_name", data.profile.name);
 
-      // Redirect berdasarkan status
       if (data.access.isPending) {
         router.push("/dashboard?tab=membership");
       } else {
@@ -57,7 +61,7 @@ export default function MasukPage() {
           </span>
           <h1 className="mt-4 text-2xl font-black">Masuk ke Akun</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Masukkan email yang terdaftar untuk mengakses dashboard.
+            Masukkan email dan password yang Anda buat saat mendaftar.
           </p>
         </div>
 
@@ -69,16 +73,25 @@ export default function MasukPage() {
           )}
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-300">
-              Email
-            </label>
+            <label className="mb-1 block text-sm font-medium text-slate-300">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@contoh.com"
+              autoComplete="email"
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
               required
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-300">Password</label>
+            <PasswordInput
+              value={password}
+              onChange={setPassword}
+              placeholder="Masukkan password Anda"
+              autoComplete="current-password"
             />
           </div>
 
@@ -96,12 +109,6 @@ export default function MasukPage() {
             Daftar sekarang
           </Link>
         </p>
-
-        <div className="mt-6 rounded-xl border border-white/5 bg-white/[0.02] p-4 text-xs text-slate-500">
-          <p className="font-semibold text-slate-400 mb-1">Demo:</p>
-          <p>Email terdaftar: budi@example.com (pending)</p>
-          <p>Atau daftar baru untuk membuat akun.</p>
-        </div>
       </div>
     </div>
   );
