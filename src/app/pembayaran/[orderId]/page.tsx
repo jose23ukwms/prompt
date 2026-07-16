@@ -56,6 +56,13 @@ export default function PembayaranPage({
   const [snapUrl, setSnapUrl] = useState("");
   const [clientKey, setClientKey] = useState("");
   const [midtransAvailable, setMidtransAvailable] = useState(true);
+  const [paymentMode, setPaymentMode] = useState<"midtrans" | "manual_transfer">("manual_transfer");
+  const [bankAccounts, setBankAccounts] = useState<Array<{ bank: string; number: string; holderName: string; note?: string }>>([]);
+  const [transferInstructions, setTransferInstructions] = useState("");
+  const [confirmationNote, setConfirmationNote] = useState("");
+  const [copiedBank, setCopiedBank] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
   const loadOrder = useCallback(async () => {
     setLoading(true);
@@ -88,6 +95,10 @@ export default function PembayaranPage({
         setSnapUrl(d.snapUrl || "");
         setClientKey(d.clientKey || "");
         setMidtransAvailable(!!d.configured);
+        setPaymentMode(d.paymentMode || "manual_transfer");
+        setBankAccounts(Array.isArray(d.bankAccounts) ? d.bankAccounts : []);
+        setTransferInstructions(d.transferInstructions || "");
+        setConfirmationNote(d.confirmationNote || "");
       })
       .catch(() => setMidtransAvailable(false));
   }, [loadOrder]);
@@ -136,6 +147,39 @@ export default function PembayaranPage({
     } finally {
       setCreating(false);
     }
+  }
+
+  async function handleConfirmTransfer() {
+    if (!order || confirming) return;
+    setConfirming(true);
+    setError("");
+    try {
+      const res = await fetch("/api/payment/confirm-transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setError(data.error || "Gagal konfirmasi transfer.");
+        return;
+      }
+      setConfirmed(true);
+      setTimeout(() => {
+        router.push(`/pembayaran/menunggu?orderId=${order.id}`);
+      }, 1200);
+    } catch {
+      setError("Terjadi kesalahan jaringan.");
+    } finally {
+      setConfirming(false);
+    }
+  }
+
+  function copyBankNumber(num: string) {
+    navigator.clipboard.writeText(num).then(() => {
+      setCopiedBank(num);
+      setTimeout(() => setCopiedBank(null), 1800);
+    });
   }
 
   if (loading) {
@@ -263,37 +307,98 @@ export default function PembayaranPage({
 
         {/* Aksi pembayaran */}
         <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-          <div className="rounded-3xl border border-indigo-400/30 bg-gradient-to-br from-indigo-500/[0.12] to-fuchsia-500/[0.08] p-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-indigo-200">
-              Metode Pembayaran
-            </p>
-            <p className="mt-2 text-sm text-slate-300">
-              Kartu Kredit, GoPay, OVO, DANA, ShopeePay, QRIS, Transfer Bank, Virtual Account.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-1">
-              {["Visa", "MC", "GoPay", "OVO", "DANA", "QRIS", "BCA VA"].map((m) => (
-                <span key={m} className="rounded bg-white/10 px-2 py-0.5 text-[10px] text-slate-200">
-                  {m}
-                </span>
-              ))}
+          {paymentMode === "midtrans" ? (
+            <div className="rounded-3xl border border-indigo-400/30 bg-gradient-to-br from-indigo-500/[0.12] to-fuchsia-500/[0.08] p-6">
+              <p className="text-xs font-semibold uppercase tracking-wider text-indigo-200">
+                Metode Pembayaran
+              </p>
+              <p className="mt-2 text-sm text-slate-300">
+                Kartu Kredit, GoPay, OVO, DANA, ShopeePay, QRIS, Transfer Bank, Virtual Account.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-1">
+                {["Visa", "MC", "GoPay", "OVO", "DANA", "QRIS", "BCA VA"].map((m) => (
+                  <span key={m} className="rounded bg-white/10 px-2 py-0.5 text-[10px] text-slate-200">
+                    {m}
+                  </span>
+                ))}
+              </div>
+
+              <button
+                onClick={handlePay}
+                disabled={creating || isPaid || !midtransAvailable}
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 transition hover:shadow-indigo-500/40 disabled:opacity-50"
+              >
+                {creating
+                  ? "Memuat Midtrans..."
+                  : isPaid
+                  ? "✓ Sudah Dibayar"
+                  : `Bayar Rp${order.amount.toLocaleString("id-ID")}`}
+              </button>
+
+              <p className="mt-3 text-center text-[11px] text-slate-500">
+                Anda akan diarahkan ke halaman pembayaran Midtrans yang aman.
+              </p>
             </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-3xl border border-amber-400/30 bg-gradient-to-br from-amber-500/[0.12] to-orange-500/[0.08] p-6">
+                <p className="text-xs font-semibold uppercase tracking-wider text-amber-200">
+                  Transfer Bank Manual
+                </p>
+                <p className="mt-2 text-sm text-slate-300">
+                  Transfer ke salah satu rekening di bawah ini sesuai nominal yang tertera.
+                </p>
 
-            <button
-              onClick={handlePay}
-              disabled={creating || isPaid || !midtransAvailable}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/25 transition hover:shadow-indigo-500/40 disabled:opacity-50"
-            >
-              {creating
-                ? "Memuat Midtrans..."
-                : isPaid
-                ? "✓ Sudah Dibayar"
-                : `Bayar Rp${order.amount.toLocaleString("id-ID")}`}
-            </button>
+                {transferInstructions && (
+                  <p className="mt-3 text-xs text-amber-100/80 leading-relaxed">
+                    {transferInstructions}
+                  </p>
+                )}
 
-            <p className="mt-3 text-center text-[11px] text-slate-500">
-              Anda akan diarahkan ke halaman pembayaran Midtrans yang aman.
-            </p>
-          </div>
+                <div className="mt-4 space-y-2">
+                  {bankAccounts.map((bank, i) => (
+                    <div key={i} className="rounded-xl border border-white/10 bg-slate-950/40 p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold text-white">{bank.bank}</p>
+                          <p className="text-xs text-slate-400">{bank.holderName}</p>
+                        </div>
+                        <button
+                          onClick={() => copyBankNumber(bank.number)}
+                          className="rounded-lg bg-white/10 px-2 py-1 text-xs font-mono text-white hover:bg-white/20"
+                        >
+                          {copiedBank === bank.number ? "✓ Tersalin" : bank.number}
+                        </button>
+                      </div>
+                      {bank.note && (
+                        <p className="mt-2 text-[10px] text-slate-500 italic">{bank.note}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleConfirmTransfer}
+                  disabled={confirming || confirmed || isPaid}
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition hover:shadow-emerald-500/40 disabled:opacity-50"
+                >
+                  {confirmed
+                    ? "✓ Konfirmasi Terkirim"
+                    : confirming
+                    ? "Mengirim..."
+                    : isPaid
+                    ? "✓ Sudah Dibayar"
+                    : "Saya Sudah Transfer"}
+                </button>
+
+                {confirmationNote && (
+                  <p className="mt-3 text-center text-[10px] text-slate-500 leading-relaxed">
+                    {confirmationNote}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 text-xs text-slate-400">
             <p className="font-semibold text-white">Butuh bantuan?</p>
