@@ -86,6 +86,7 @@ export const profiles = pgTable("profiles", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
   phone: varchar("phone", { length: 32 }).default("").notNull(),
+  passwordHash: varchar("password_hash", { length: 255 }),
   role: varchar("role", { length: 32 }).default("user").notNull(), // user, admin, superadmin
   planSlug: varchar("plan_slug", { length: 64 }).default("free").notNull(),
   status: varchar("status", { length: 32 }).default("active").notNull(), // active, pending, rejected
