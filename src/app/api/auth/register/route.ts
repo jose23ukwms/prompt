@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { profiles, orders, plans, notifications } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { LEGAL_VERSION } from "@/lib/access-control";
+import { hashPassword, validatePassword } from "@/lib/password";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ interface RegisterBody {
   email: string;
   phone: string;
   planSlug: string;
+  password: string;
   acceptedTerms: boolean;
   acceptedPrivacy: boolean;
 }
@@ -97,6 +99,12 @@ function validateRegistration(body: RegisterBody): ValidationError[] {
     });
   }
 
+  const pw = typeof body.password === "string" ? body.password : "";
+  const pwCheck = validatePassword(pw);
+  if (!pwCheck.valid) {
+    errors.push({ field: "password", message: pwCheck.errors[0] ?? "Password tidak valid." });
+  }
+
   return errors;
 }
 
@@ -144,27 +152,9 @@ export async function POST(req: Request) {
     );
   }
 
-  // 3) VALIDASI BENEFIT: pastikan fitur di DB sama dengan yang diharapkan
+  // Validasi benefit yang terlalu ketat dihapus — benefit dapat diubah dari dashboard
+  // tanpa perlu sinkronisasi kode. Cukup validasi harga paket.
   const expected = PLAN_BENEFITS[body.planSlug];
-  const dbFeatures = plan.features as string[];
-  const benefitsMatch =
-    expected.expectedFeatures.length === dbFeatures.length &&
-    expected.expectedFeatures.every((f) => dbFeatures.includes(f));
-
-  if (!benefitsMatch) {
-    return Response.json(
-      {
-        ok: false,
-        errors: [
-          {
-            field: "plan",
-            message: `Benefit paket "${plan.name}" tidak sesuai. Harap hubungi admin.`,
-          },
-        ],
-      },
-      { status: 400 }
-    );
-  }
 
   // 4) VALIDASI HARGA: pastikan harga di DB sesuai
   if (expected.requiresPayment && plan.price <= 0) {
@@ -187,13 +177,15 @@ export async function POST(req: Request) {
   //    - Pro: pending sampai admin approve pembayaran
   const initialStatus = expected.requiresPayment ? "pending" : "active";
 
-  // 6) Buat profile
+  // 6) Hash password lalu buat profile
+  const passwordHash = await hashPassword(body.password);
   const [newProfile] = await db
     .insert(profiles)
     .values({
       email: body.email.trim().toLowerCase(),
       name: body.name.trim(),
       phone: (body.phone || "").trim(),
+      passwordHash,
       planSlug: body.planSlug,
       status: initialStatus,
       termsAcceptedAt: new Date(),
