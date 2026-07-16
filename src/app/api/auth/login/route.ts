@@ -1,38 +1,51 @@
 import { db } from "@/db";
 import { profiles, notifications } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { verifyPassword } from "@/lib/password";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const { email } = await req.json();
+  const body = await req.json().catch(() => ({}));
+  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const password = typeof body.password === "string" ? body.password : "";
 
-  if (!email || typeof email !== "string") {
+  if (!email || !password) {
     return Response.json(
-      { ok: false, errors: [{ field: "email", message: "Email wajib diisi." }] },
+      { ok: false, errors: [{ field: "form", message: "Email dan password wajib diisi." }] },
       { status: 400 }
     );
   }
 
-  const normalizedEmail = email.trim().toLowerCase();
-
   const [profile] = await db
     .select()
     .from(profiles)
-    .where(eq(profiles.email, normalizedEmail))
+    .where(eq(profiles.email, email))
     .limit(1);
 
+  // Pesan generik untuk mencegah user enumeration
   if (!profile) {
     return Response.json(
-      {
-        ok: false,
-        errors: [{ field: "email", message: "Email belum terdaftar. Silakan daftar terlebih dahulu." }],
-      },
-      { status: 404 }
+      { ok: false, errors: [{ field: "form", message: "Email atau password salah." }] },
+      { status: 401 }
     );
   }
 
-  // Ambil notifikasi user
+  const ok = await verifyPassword(password, profile.passwordHash);
+  if (!ok) {
+    return Response.json(
+      { ok: false, errors: [{ field: "form", message: "Email atau password salah." }] },
+      { status: 401 }
+    );
+  }
+
+  if (profile.status === "rejected") {
+    return Response.json(
+      { ok: false, errors: [{ field: "form", message: "Akun Anda telah ditolak. Hubungi bantuan." }] },
+      { status: 403 }
+    );
+  }
+
   const notifs = await db
     .select()
     .from(notifications)
@@ -40,7 +53,6 @@ export async function POST(req: Request) {
     .orderBy(desc(notifications.createdAt))
     .limit(20);
 
-  // Tentukan benefit berdasarkan plan
   const isPremium = profile.planSlug !== "free" && profile.status === "active";
   const isPending = profile.status === "pending";
 
