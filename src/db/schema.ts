@@ -126,6 +126,12 @@ export const notifications = pgTable("notifications", {
 
 // Tracking copy per-user per-prompt untuk membatasi user gratis (1x copy).
 // clientId dipakai untuk user anonim, profileId dipakai untuk user login.
+export const settings = pgTable("settings", {
+  key: varchar("key", { length: 100 }).primaryKey(),
+  value: jsonb("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const deviceTrials = pgTable("device_trials", {
   id: serial("id").primaryKey(),
   deviceId: varchar("device_id", { length: 64 }).notNull().unique(),
