@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   email VARCHAR(255) NOT NULL UNIQUE,
   name VARCHAR(255) NOT NULL,
   phone VARCHAR(32) DEFAULT '' NOT NULL,
+  password_hash VARCHAR(255),
   role VARCHAR(32) DEFAULT 'user' NOT NULL,
   plan_slug VARCHAR(64) DEFAULT 'free' NOT NULL,
   status VARCHAR(32) DEFAULT 'active' NOT NULL,
@@ -94,10 +95,11 @@ COMMENT ON COLUMN profiles.role IS 'Role user: user, admin, superadmin';
 COMMENT ON COLUMN profiles.plan_slug IS 'Slug paket (free, pro-bulanan, pro-tahunan, enterprise)';
 COMMENT ON COLUMN profiles.status IS 'Status akun: active, pending, rejected, suspended';
 
--- Aman untuk database lama: kolom persetujuan legal.
+-- Aman untuk database lama: kolom persetujuan legal dan password hash.
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS privacy_accepted_at TIMESTAMP;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS legal_version VARCHAR(32);
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
 
 -- ========================================
 -- 4. TABEL: orders
