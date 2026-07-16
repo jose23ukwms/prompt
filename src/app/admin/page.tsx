@@ -8,12 +8,14 @@ import PromptsTab from "@/components/admin/PromptsTab";
 import OrdersTab from "@/components/admin/OrdersTab";
 import CustomersTab from "@/components/admin/CustomersTab";
 import DataTab from "@/components/admin/DataTab";
+import PaymentSettingsTab from "@/components/admin/PaymentSettingsTab";
 
 const NAV = [
   { id: "overview", label: "Ringkasan", icon: "📊" },
   { id: "prompts", label: "Prompt", icon: "📦" },
   { id: "orders", label: "Pesanan", icon: "🧾" },
   { id: "customers", label: "Pengelola User", icon: "👥" },
+  { id: "payment", label: "Pembayaran", icon: "💳" },
   { id: "data", label: "Data", icon: "🗄️" },
 ];
 
@@ -137,6 +139,7 @@ export default function AdminPanel() {
               {tab === "prompts" && <PromptsTab />}
               {tab === "orders" && <OrdersTab />}
               {tab === "customers" && <CustomersTab />}
+              {tab === "payment" && <PaymentSettingsTab />}
               {tab === "data" && <DataTab />}
             </main>
           </div>
