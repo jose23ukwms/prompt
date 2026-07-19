@@ -88,15 +88,61 @@ export default function TermsPage() {
         <p>Kami dapat membatasi atau menutup akses akibat pelanggaran, fraud, chargeback, penyalahgunaan lisensi, risiko keamanan, atau kewajiban hukum. Pengguna dapat berhenti menggunakan layanan kapan saja; kewajiban pembayaran yang telah terjadi tetap berlaku.</p>
       </LegalSection>
 
-      <LegalSection title="13. Batas Tanggung Jawab">
+      <LegalSection title="13. Disclaimer Layanan & Proteksi Pengelola">
+        <p className="font-bold text-amber-300">PERHATIKAN DENGAN SEKSAMA:</p>
+        <p className="mt-2">
+          Start Digital adalah layanan digital yang bergantung pada infrastruktur pihak ketiga seperti <b>Vercel</b> (hosting), <b>Supabase</b> (database), <b>Midtrans</b> (payment gateway), dan layanan AI (OpenAI, Anthropic, Google, dll). Kami tidak memiliki kontrol penuh atas operasional, ketersediaan, atau kebijakan penyedia tersebut.
+        </p>
+        <p className="mt-3 font-bold">
+          Pengguna memahami dan menyetujui bahwa:
+        </p>
+        <LegalList items={[
+          <>Layanan dapat mengalami <b>gangguan sementara</b> atau <b>downtime</b> akibat pemeliharaan server, update sistem, atau masalah teknis pihak ketiga. Kami akan berusaha memulihkan layanan secepat mungkin, namun tidak memberikan jaminan waktu pemulihan spesifik.</>,
+          <>Penyedia infrastruktur seperti <b>Vercel</b> berhak menutup layanan atau mengubah kebijakan mereka kapan saja tanpa pemberitahuan kepada kami. Jika hal ini terjadi, kami akan berusaha memigrasi layanan ke infrastruktur alternatif, namun tidak menjamin kelangsungan layanan secara abadi.</>,
+          <>Layanan bersifat <b>"as is"</b> (seadanya) tanpa garansi eksplisit atau implisit mengenai ketersediaan 24/7, uptime 100%, atau performa optimal di semua kondisi.</>,
+          <>Pengelola berhak mengubah, membatasi, atau menghentikan fitur tertentu apabila terjadi perubahan biaya infrastruktur, regulasi, atau faktor ekonomi yang membuat operasional tidak berkelanjutan.</>,
+        ]} />
+      </LegalSection>
+
+      <LegalSection title="14. Ketentuan Pembayaran Sekali (One-Time Payment)">
+        <p className="font-bold text-amber-300">PENTING UNTUK DIPAHAMI:</p>
+        <p className="mt-2">
+          Paket <b>Pro</b> menggunakan skema <b>pembayaran satu kali (one-time payment)</b> yang memberikan akses ke seluruh fitur premium untuk periode waktu yang tidak ditentukan. Namun, pembayaran ini <b>BUKAN</b> merupakan kontrak seumur hidup yang mengikat pengelola untuk menyediakan layanan secara permanen tanpa batas waktu.
+        </p>
+        <p className="mt-3 font-bold">
+          Dengan melakukan pembayaran, pengguna menyatakan memahami bahwa:
+        </p>
+        <LegalList items={[
+          <>Pembayaran one-time memberikan akses ke layanan selama layanan masih dioperasikan oleh pengelola. Ini <b>BUKAN</b> jaminan akses seumur hidup atau perpetual license.</>,
+          <>Pengelola berhak <b>menghentikan layanan secara keseluruhan</b> apabila terjadi force majeure (bencana alam, pandemi, perang), kebangkrutan, perubahan regulasi yang melarang operasional, atau faktor lain yang membuat kelangsungan layanan tidak mungkin atau tidak ekonomis.</>,
+          <>Pengelola <b>tidak bertanggung jawab</b> atas kerugian finansial, kehilangan data, atau dampak bisnis yang dialami pengguna akibat penghentian layanan, selama penghentian tersebut dilakukan dengan pemberitahuan wajar (minimal 30 hari sebelum penutupan).</>,
+          <>Dalam hal layanan dihentikan secara permanen, pengelola <b>tidak berkewajiban</b> mengembalikan dana pembayaran yang telah dilakukan, karena pembayaran telah digunakan untuk akses layanan selama periode layanan aktif.</>,
+          <>Pengelola <b>berhak mengubah model bisnis</b> (misalnya dari one-time payment menjadi subscription) untuk layanan baru atau fitur tambahan di masa depan, namun pengguna yang sudah membayar akan tetap mendapat akses ke fitur yang sudah ada sebelum perubahan.</>,
+          <>Pengelola <b>tidak dapat dituntut</b> secara hukum atas penghentian layanan yang disebabkan oleh faktor di luar kendali (force majeure), kebangkrutan, atau keputusan bisnis yang wajar.</>,
+        ]} />
+        <p className="mt-3 font-bold text-red-400">
+          DENGAN MELAKUKAN PEMBAYARAN, ANDA MENYETUJUI BAHWA PENGELOLA TIDAK BERTANGGUNG JAWAB ATAS KERUGIAN AKIBAT PENGHENTIAN LAYANAN YANG DILAKUKAN DENGAN ALASAN YANG WAJAR DAN DENGAN PEMBERITAHUAN YANG CUKUP.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="15. Force Majeure">
+        <p>
+          Pengelola tidak bertanggung jawab atas kegagalan atau keterlambatan dalam memenuhi kewajiban yang disebabkan oleh <b>force majeure</b>, termasuk namun tidak terbatas pada: bencana alam (gempa bumi, banjir, tsunami), pandemi, perang, kerusuhan, tindakan pemerintah, pemadaman listrik masif, serangan siber, kegagalan infrastruktur internet global, atau kejadian lain yang tidak dapat dikendalikan secara wajar oleh pengelola.
+        </p>
+        <p className="mt-2">
+          Dalam hal force majeure, pengelola akan berusaha memulihkan layanan secepat mungkin, namun tidak memberikan jaminan waktu pemulihan tertentu. Pengguna tidak dapat menuntut ganti rugi atas gangguan yang disebabkan oleh force majeure.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="16. Batas Tanggung Jawab">
         <p>Sejauh diizinkan hukum, Start Digital tidak bertanggung jawab atas kerugian tidak langsung, kehilangan data, kehilangan keuntungan, keputusan berdasarkan output AI, atau gangguan pihak ketiga. Tanggung jawab maksimal kami dibatasi pada nilai pembayaran pengguna dalam 3 bulan sebelum klaim, kecuali hukum menentukan lain.</p>
       </LegalSection>
 
-      <LegalSection title="14. Hukum dan Penyelesaian Perselisihan">
+      <LegalSection title="17. Hukum dan Penyelesaian Perselisihan">
         <p>Ketentuan ini tunduk pada hukum Republik Indonesia. Perselisihan diupayakan terlebih dahulu melalui musyawarah dan komunikasi tertulis. Jika tidak selesai, penyelesaian mengikuti forum yang berwenang sesuai peraturan Indonesia.</p>
       </LegalSection>
 
-      <LegalSection title="15. Kontak">
+      <LegalSection title="18. Kontak">
         <p>Pertanyaan, pengaduan, atau permintaan refund dapat dikirim ke <a className="text-indigo-300" href="mailto:help@startdigital.app">help@startdigital.app</a>.</p>
       </LegalSection>
     </LegalPage>
