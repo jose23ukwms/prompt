@@ -15,9 +15,8 @@ type Profile = {
 type Order = { profileEmail: string; status: string };
 
 const PLAN_LABELS: Record<string, string> = {
-  free: "Gratis",
-  "pro-bulanan": "Pro Bulanan",
-  "pro-tahunan": "Pro Tahunan",
+  free: "Gratis 7 Hari",
+  pro: "Pro",
   enterprise: "Enterprise",
 };
 
