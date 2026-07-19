@@ -43,7 +43,7 @@ COMMENT ON COLUMN categories.color IS 'Hex color untuk UI badge';
 
 -- ========================================
 -- 2. TABEL: plans
--- Menyimpan paket membership (Gratis, Pro Bulanan, Pro Tahunan, Enterprise)
+-- Menyimpan paket membership (Gratis 7 Hari, Pro sekali bayar, Enterprise)
 -- ========================================
 CREATE TABLE IF NOT EXISTS plans (
   id SERIAL PRIMARY KEY,
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS plans (
 CREATE INDEX IF NOT EXISTS idx_plans_slug ON plans(slug);
 CREATE INDEX IF NOT EXISTS idx_plans_sort_order ON plans(sort_order);
 
-COMMENT ON TABLE plans IS 'Paket membership (Gratis, Pro Bulanan, Pro Tahunan, Enterprise)';
+COMMENT ON TABLE plans IS 'Paket membership (Gratis 7 Hari, Pro sekali bayar, Enterprise)';
 COMMENT ON COLUMN plans.price IS 'Harga dalam Rupiah (0 untuk gratis/custom)';
 COMMENT ON COLUMN plans.period IS 'Periode pembayaran (bulan, tahun, selamanya, custom)';
 COMMENT ON COLUMN plans.features IS 'Array JSON fitur yang didapat';
@@ -92,7 +92,7 @@ CREATE INDEX IF NOT EXISTS idx_profiles_plan_slug ON profiles(plan_slug);
 
 COMMENT ON TABLE profiles IS 'Data user/pelanggan';
 COMMENT ON COLUMN profiles.role IS 'Role user: user, admin, superadmin';
-COMMENT ON COLUMN profiles.plan_slug IS 'Slug paket (free, pro-bulanan, pro-tahunan, enterprise)';
+COMMENT ON COLUMN profiles.plan_slug IS 'Slug paket (free, pro, enterprise)';
 COMMENT ON COLUMN profiles.status IS 'Status akun: active, pending, rejected, suspended';
 
 -- Aman untuk database lama: kolom persetujuan legal dan password hash.
@@ -548,14 +548,12 @@ ON CONFLICT (slug) DO UPDATE SET
 
 -- Plans
 INSERT INTO plans (slug, name, price, period, highlighted, features, sort_order) VALUES
-  ('free', 'Gratis', 0, 'selamanya', false,
-   '["70 Prompt pilihan", "Copy 1x per prompt", "Update terbatas", "Akses kategori dasar"]', 1),
-  ('pro-bulanan', 'Pro Bulanan', 99000, 'bulan', true,
-   '["Semua prompt premium", "Prompt baru setiap minggu", "Template & AI Workflow", "AI Automation", "Prioritas dukungan"]', 2),
-  ('pro-tahunan', 'Pro Tahunan', 890000, 'tahun', false,
-   '["Semua fitur Pro Bulanan", "Hemat 25% dari bulanan", "Update selamanya", "Akses beta fitur baru"]', 3),
+  ('free', 'Gratis 7 Hari', 0, '7 hari', false,
+   '["70 Prompt pilihan", "Copy 1x per prompt", "Akses 7 hari per perangkat", "Update terbatas"]', 1),
+  ('pro', 'Pro', 899000, 'sekali bayar', true,
+   '["Akses selamanya ke 1000+ prompt premium", "Copy tanpa batas", "Prompt Troubleshooter", "Update selamanya", "AI Workflow & Automation", "Support prioritas"]', 2),
   ('enterprise', 'Enterprise', 0, 'custom', false,
-   '["Lisensi tim & perusahaan", "Prompt kustom on-demand", "SOP & workflow internal", "Onboarding & pelatihan", "Dedicated support"]', 4)
+   '["Akses penuh tanpa batas", "Prompt custom on-demand", "API integration", "Lisensi tim & perusahaan", "Onboarding & pelatihan", "SLA & dedicated support"]', 3)
 ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
   price = EXCLUDED.price,
