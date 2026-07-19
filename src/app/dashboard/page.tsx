@@ -35,8 +35,7 @@ type NotifData = {
 
 const PLAN_LABELS: Record<string, string> = {
   free: "Gratis",
-  "pro-bulanan": "Pro Bulanan",
-  "pro-tahunan": "Pro Tahunan",
+  pro: "Pro",
   enterprise: "Enterprise",
 };
 
