@@ -102,7 +102,7 @@ export default async function HargaPage() {
             </thead>
             <tbody>
               {[
-                { label: "Akses prompt", values: ["70 prompt / 7 hari", "1000+ prompt (selamanya)", "Semua + prompt kustom"] },
+                { label: "Akses prompt", values: ["70 prompt / 7 hari", "1330+ prompt", "Semua + prompt kustom"] },
                 { label: "Prompt premium", values: ["✗", "✓", "✓"] },
                 { label: "Copy tanpa batas", values: ["✗ (1x/prompt)", "✓", "✓"] },
                 { label: "Prompt Troubleshooter", values: ["✗", "✓", "✓"] },
