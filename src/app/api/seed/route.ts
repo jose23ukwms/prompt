@@ -95,7 +95,7 @@ export async function POST() {
         status: "active"
       }).returning();
   
-      const [planPro] = await db.select().from(plans).where(eq(plans.slug, "pro-bulanan")).limit(1);
+      const [planPro] = await db.select().from(plans).where(eq(plans.slug, "pro")).limit(1);
       
       if (planPro) {
         await db.insert(orders).values({
