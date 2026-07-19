@@ -363,7 +363,7 @@ export default function PembayaranPage({
 
               {(() => {
                 const tier =
-                  order.planSlug === "pro-tahunan" ? "gold"
+                  order.planSlug === "pro" ? "gold"
                   : order.planSlug === "enterprise" ? "platinum"
                   : "silver";
 
