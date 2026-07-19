@@ -40,19 +40,21 @@ function validateName(name: string): boolean {
 // Plan benefit matrix — ini adalah sumber kebenaran untuk validasi
 const PLAN_BENEFITS: Record<string, { label: string; requiresPayment: boolean; expectedFeatures: string[] }> = {
   free: {
-    label: "Gratis",
+    label: "Gratis 7 Hari",
     requiresPayment: false,
-    expectedFeatures: ["70 Prompt pilihan", "Copy 1x per prompt", "Update terbatas", "Akses kategori dasar"],
+    expectedFeatures: ["70 Prompt pilihan", "Copy 1x per prompt", "Akses 7 hari per perangkat", "Update terbatas"],
   },
-  "pro-bulanan": {
-    label: "Pro Bulanan",
+  "pro": {
+    label: "Pro",
     requiresPayment: true,
-    expectedFeatures: ["Semua prompt premium", "Prompt baru setiap minggu", "Template & AI Workflow", "AI Automation", "Prioritas dukungan"],
-  },
-  "pro-tahunan": {
-    label: "Pro Tahunan",
-    requiresPayment: true,
-    expectedFeatures: ["Semua fitur Pro Bulanan", "Hemat 25% dari bulanan", "Update selamanya", "Akses beta fitur baru"],
+    expectedFeatures: [
+      "Akses selamanya ke 1000+ prompt premium",
+      "Copy tanpa batas",
+      "Prompt Troubleshooter",
+      "Update selamanya",
+      "AI Workflow & Automation",
+      "Support prioritas",
+    ],
   },
   enterprise: {
     label: "Enterprise",
