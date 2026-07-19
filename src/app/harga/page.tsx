@@ -24,7 +24,7 @@ export default async function HargaPage() {
         </p>
       </div>
 
-      <div className="mt-12 grid gap-5 lg:grid-cols-4">
+      <div className="mt-12 grid gap-5 lg:grid-cols-3">
         {rows.map((plan) => (
           <div
             key={plan.id}
@@ -102,17 +102,18 @@ export default async function HargaPage() {
             </thead>
             <tbody>
               {[
-                { label: "Akses prompt", values: ["70 prompt / 7 hari", "Semua", "Semua", "Semua + kustom"] },
-                { label: "Prompt premium", values: ["✗", "✓", "✓", "✓"] },
-                { label: "Copy 1-klik", values: ["✓", "✓", "✓", "✓"] },
-                { label: "Update mingguan", values: ["✗", "✓", "✓", "✓"] },
-                { label: "Template & Workflow", values: ["✗", "✓", "✓", "✓"] },
-                { label: "AI Automation", values: ["✗", "✓", "✓", "✓"] },
-                { label: "Prompt lanjutan", values: ["Terbatas", "✓", "✓", "✓"] },
-                { label: "Update selamanya", values: ["✗", "✗", "✓", "✓"] },
-                { label: "Beta fitur baru", values: ["✗", "✗", "✓", "✓"] },
-                { label: "Lisensi tim", values: ["✗", "✗", "✗", "✓"] },
-                { label: "Dedicated support", values: ["✗", "✗", "✗", "✓"] },
+                { label: "Akses prompt", values: ["70 prompt / 7 hari", "1000+ prompt (selamanya)", "Semua + prompt kustom"] },
+                { label: "Prompt premium", values: ["✗", "✓", "✓"] },
+                { label: "Copy tanpa batas", values: ["✗ (1x/prompt)", "✓", "✓"] },
+                { label: "Prompt Troubleshooter", values: ["✗", "✓", "✓"] },
+                { label: "Prompt lanjutan (follow-up)", values: ["Terbatas", "✓", "✓"] },
+                { label: "AI Workflow & Automation", values: ["✗", "✓", "✓"] },
+                { label: "Update selamanya", values: ["✗", "✓", "✓"] },
+                { label: "Support prioritas", values: ["✗", "✓", "✓"] },
+                { label: "Lisensi tim & perusahaan", values: ["✗", "✗", "✓"] },
+                { label: "API integration", values: ["✗", "✗", "✓"] },
+                { label: "Onboarding & training", values: ["✗", "", "✓"] },
+                { label: "SLA & dedicated support", values: ["✗", "✗", "✓"] },
               ].map((row) => (
                 <tr key={row.label} className="border-b border-white/5 hover:bg-white/[0.02]">
                   <td className="px-4 py-3 text-slate-300">{row.label}</td>
